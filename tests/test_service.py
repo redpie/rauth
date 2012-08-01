@@ -113,8 +113,8 @@ class OAuth2ServiceTestCase(RauthTestCase):
         # mock service for testing
         service = OAuth2Service(
                 'example',
-                consumer_key='123',
-                consumer_secret='456',
+                client_id='123',
+                client_secret='456',
                 access_token_url='http://example.com/access_token',
                 authorize_url='http://example.com/authorize')
         self.service = service
@@ -122,8 +122,8 @@ class OAuth2ServiceTestCase(RauthTestCase):
     def test_init_with_access_token(self):
         service = OAuth2Service(
                 'example',
-                consumer_key='123',
-                consumer_secret='456',
+                client_id='123',
+                client_secret='456',
                 access_token_url='http://example.com/access_token',
                 authorize_url='http://example.com/authorize',
                 access_token='321')

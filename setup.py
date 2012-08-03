@@ -17,9 +17,9 @@ if sys.argv[-1] == 'test':
     sys.exit()
 
 setup(
-    name='rauth',
+    name='redpie.rauth',
     version=rauth.__version__,
-    description='A Python library for OAuth 1.0/a, 2.0, and Ofly.',
+    description='FORK: A Python library for OAuth 1.0/a, 2.0, and Ofly.',
     long_description=open('README.markdown').read(),
     author='Max Countryman',
     author_email='max@litl.com',

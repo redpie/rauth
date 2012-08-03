@@ -14,6 +14,7 @@ from rauth.hook import OAuth1Hook
 from urllib import quote, urlencode
 from urlparse import parse_qsl, urlsplit
 from datetime import datetime
+from base64 import b64encode
 
 
 def parse_utf8_qsl(s):
@@ -337,10 +338,25 @@ class OAuth2Service(Request):
         :param url: The resource to be requested.
         :param \*\*kwargs: Optional arguments. Same as Requests.
         '''
+        access_token = kwargs.pop('access_token', None)
         allow_redirects = kwargs.pop('allow_redirects', True)
+        headers = kwargs.pop('headers', {})
+
+        if access_token and isinstance(access_token, Response):
+            try:
+                access_token = access_token.content['access_token']
+            except KeyError:
+                # Should we raise a useful message here?
+                access_token = None
+
+        if access_token:
+            headers.update({
+                'Authorization': 'Bearer %s' % b64encode(access_token)
+            })
 
         response = self.session.request(method,
                                         url,
+                                        headers=headers,
                                         allow_redirects=allow_redirects,
                                         **kwargs)
         return Response(response)

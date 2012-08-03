@@ -143,6 +143,16 @@ class OAuth2ServiceTestCase(RauthTestCase):
                 'http://example.com/authorize?response_type=code&client_id=123'
         self.assertEqual(expected_url, authorize_url)
 
+    def test_get_authorize_url_raises(self):
+        service = OAuth2Service(
+                'example',
+                client_id='123',
+                client_secret='456',
+                access_token_url='http://example.com/access_token')
+
+        with self.assertRaises(ValueError):
+            authorize_url = service.get_authorize_url()
+
     def test_get_authorize_url_response_type(self):
         authorize_url = self.service.get_authorize_url(response_type='token')
         expected_url = \

@@ -129,6 +129,14 @@ class OAuth2ServiceTestCase(RauthTestCase):
                 access_token='321')
         self.assertEqual(service.access_token, '321')
 
+    def test_init_without_authorize_url(self):
+        service = OAuth2Service(
+                'example',
+                client_id='123',
+                client_secret='456',
+                access_token_url='http://example.com/access_token')
+        self.assertEqual(service.client_id, '123')
+
     def test_get_authorize_url(self):
         authorize_url = self.service.get_authorize_url()
         expected_url = \

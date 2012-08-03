@@ -113,8 +113,8 @@ class OAuth2ServiceTestCase(RauthTestCase):
         # mock service for testing
         service = OAuth2Service(
                 'example',
-                consumer_key='123',
-                consumer_secret='456',
+                client_id='123',
+                client_secret='456',
                 access_token_url='http://example.com/access_token',
                 authorize_url='http://example.com/authorize')
         self.service = service
@@ -122,18 +122,36 @@ class OAuth2ServiceTestCase(RauthTestCase):
     def test_init_with_access_token(self):
         service = OAuth2Service(
                 'example',
-                consumer_key='123',
-                consumer_secret='456',
+                client_id='123',
+                client_secret='456',
                 access_token_url='http://example.com/access_token',
                 authorize_url='http://example.com/authorize',
                 access_token='321')
         self.assertEqual(service.access_token, '321')
+
+    def test_init_without_authorize_url(self):
+        service = OAuth2Service(
+                'example',
+                client_id='123',
+                client_secret='456',
+                access_token_url='http://example.com/access_token')
+        self.assertEqual(service.client_id, '123')
 
     def test_get_authorize_url(self):
         authorize_url = self.service.get_authorize_url()
         expected_url = \
                 'http://example.com/authorize?response_type=code&client_id=123'
         self.assertEqual(expected_url, authorize_url)
+
+    def test_get_authorize_url_raises(self):
+        service = OAuth2Service(
+                'example',
+                client_id='123',
+                client_secret='456',
+                access_token_url='http://example.com/access_token')
+
+        with self.assertRaises(ValueError):
+            authorize_url = service.get_authorize_url()
 
     def test_get_authorize_url_response_type(self):
         authorize_url = self.service.get_authorize_url(response_type='token')

@@ -14,6 +14,7 @@ from rauth.hook import OAuth1Hook
 from urllib import quote, urlencode
 from urlparse import parse_qsl, urlsplit
 from datetime import datetime
+from base64 import b64encode
 
 
 def parse_utf8_qsl(s):
@@ -260,25 +261,23 @@ class OAuth2Service(Request):
         token = service.get_access_token('POST', data=data)
 
     :param name: The service name.
-    :param consumer_key: Client consumer key.
-    :param consumer_secret: Client consumer secret.
+    :param client_id: Client identifier.
+    :param client_secret: Client secret.
     :param access_token_url: Access token endpoint.
     :param authorize_url: Authorize endpoint.
     :param access_token: An access token, defaults to None.
     '''
-    def __init__(self, name, consumer_key, consumer_secret, access_token_url,
-            authorize_url, access_token=None):
+    def __init__(self, name, client_id, client_secret, access_token_url,
+            authorize_url=None, access_token=None):
         self.name = name
 
-        self.consumer_key = consumer_key
-        self.consumer_secret = consumer_secret
+        self.client_id = client_id
+        self.client_secret = client_secret
 
         self.access_token_url = access_token_url
         self.authorize_url = authorize_url
 
-        self.access_token = None
-        if access_token is not None:
-            self.access_token = access_token
+        self.access_token = access_token
 
         self.session = requests.session()
 
@@ -289,7 +288,10 @@ class OAuth2Service(Request):
         :param \*\*params: Additional keyworded arguments to be added to the
             request querystring.
         '''
-        params.update({'client_id': self.consumer_key,
+        if not self.authorize_url:
+            raise ValueError('An authorize_url has not been provided.')
+
+        params.update({'client_id': self.client_id,
                        'response_type': response_type})
         params = '?' + urlencode(params)
         return self.authorize_url + params
@@ -316,10 +318,10 @@ class OAuth2Service(Request):
 
         # client_credentials flow uses basic authentication for a token
         if grant_type == 'client_credentials':
-            kwargs['auth'] = (self.consumer_key, self.consumer_secret)
+            kwargs['auth'] = (self.client_id, self.client_secret)
         else:
-            kwargs[key].update(client_id=self.consumer_key,
-                               client_secret=self.consumer_secret,
+            kwargs[key].update(client_id=self.client_id,
+                               client_secret=self.client_secret,
                                grant_type=grant_type)
 
         response = self.session.request(method,
@@ -336,7 +338,27 @@ class OAuth2Service(Request):
         :param url: The resource to be requested.
         :param \*\*kwargs: Optional arguments. Same as Requests.
         '''
-        response = self.session.request(method, url, **kwargs)
+        access_token = kwargs.pop('access_token', None)
+        allow_redirects = kwargs.pop('allow_redirects', True)
+        headers = kwargs.pop('headers', {})
+
+        if access_token and isinstance(access_token, Response):
+            try:
+                access_token = access_token.content['access_token']
+            except KeyError:
+                # Should we raise a useful message here?
+                access_token = None
+
+        if access_token:
+            headers.update({
+                'Authorization': 'Bearer %s' % b64encode(access_token)
+            })
+
+        response = self.session.request(method,
+                                        url,
+                                        headers=headers,
+                                        allow_redirects=allow_redirects,
+                                        **kwargs)
         return Response(response)
 
 
